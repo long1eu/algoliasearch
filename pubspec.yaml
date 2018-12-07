@@ -1,0 +1,17 @@
+name: algoliasearch
+description: A starting point for Dart libraries or applications.
+version: 0.1.0
+homepage: http://github.com/long1eu/algoliasearch
+author: long1eu <home@long1.eu>
+
+environment:
+  sdk: '>=2.0.0 <3.0.0'
+
+dependencies:
+  path: ^1.4.1
+  quiver: any
+
+dev_dependencies:
+  test: ^1.0.0
+  uuid: ^1.0.3
+  mockito: ^4.0.0
