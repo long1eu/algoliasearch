@@ -1,4 +1,8 @@
 {
   "applicationId": "ODXESEWP8N",
-  "apiKey": "352833645b0088dceb7fa8de8162e096"
+  "apiKey": "352833645b0088dceb7fa8de8162e096",
+  "places": {
+    "applicationId": "plJVUNU38NMQ",
+    "apiKey": "411d123151a85d2ad4339b8a2cdfcb2c"
+  }
 }

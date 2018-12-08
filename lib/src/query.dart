@@ -6,6 +6,7 @@ import 'dart:convert';
 
 import 'package:algoliasearch/src/abstract_query.dart';
 import 'package:algoliasearch/src/algolia_exception.dart';
+import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 
 /// Describes all parameters of a search query.
@@ -256,7 +257,8 @@ class Query extends AbstractQuery {
 
   List<String> get facets => AbstractQuery.parseArray(this[_keyFacets]);
 
-  set facetFilters(List<dynamic> filters) => this[_keyFacetFilters] = filters;
+  set facetFilters(List<dynamic> filters) =>
+      this[_keyFacetFilters] = jsonEncode(filters);
 
   List<dynamic> get facetFilters {
     try {
@@ -327,9 +329,14 @@ class Query extends AbstractQuery {
 
   int get hitsPerPage => AbstractQuery.parseInt(this[_keyHitsPerPage]);
 
-  set ignorePlurals(IgnorePlurals ignorePlurals) =>
-      this[_keyIgnorePlurals] = ignorePlurals.enabled ??
-          IgnorePlurals.fromCodes(ignorePlurals.languageCodes);
+  set ignorePlurals(IgnorePlurals ignorePlurals) {
+    if (ignorePlurals == null) {
+      this[_keyIgnorePlurals] = null;
+      return;
+    } else {
+      this[_keyIgnorePlurals] = ignorePlurals;
+    }
+  }
 
   IgnorePlurals get ignorePlurals =>
       IgnorePlurals.parse(this[_keyIgnorePlurals]);
@@ -392,51 +399,48 @@ class Query extends AbstractQuery {
     } else if (values is List<Polygon>) {
       final List<Polygon> polygons = values;
 
-      StringBuffer insidePolygon;
+      String insidePolygon;
       if (polygons == null) {
         insidePolygon = null;
       } else if (polygons.length == 1) {
-        insidePolygon = StringBuffer(polygons[0].toString());
+        insidePolygon = polygons[0].toString();
       } else {
         for (Polygon polygon in polygons) {
           final String polygonStr = '[$polygon]';
           if (insidePolygon == null) {
-            insidePolygon.write('[');
+            insidePolygon = '[';
           } else {
-            insidePolygon.write(',');
+            insidePolygon += ',';
           }
-          insidePolygon.write(polygonStr);
+          insidePolygon += polygonStr;
         }
-        insidePolygon.write(']');
+        insidePolygon += ']';
       }
+
       this[_keyInsidePolygon] = insidePolygon;
     } else {
       throw ArgumentError(
-          'value must be eather a  List<LatLng> or aList<Polygon>, '
+          'value must be eather a List<LatLng> or a List<Polygon>, '
           'but it was ${values.runtimeType}');
     }
   }
 
   List<Polygon> get insidePolygon {
-    try {
-      final String value = this[_keyInsidePolygon];
-      List<Polygon> polygons;
-      if (value == null) {
-        return null;
-      } else if (value.startsWith('[')) {
-        final List<String> values = AbstractQuery.parseArray(value);
-        polygons = <Polygon>[]..length = values.length;
-        for (int i = 0; i < values.length; i++) {
-          polygons[i] =
-              Polygon.parse(values[i].replaceAll('[', '').replaceAll(']', ''));
-        }
-        return polygons;
-      } else {
-        final Polygon polygon = Polygon.parse(value);
-        return <Polygon>[polygon];
-      }
-    } catch (e) {
+    final String value = this[_keyInsidePolygon];
+
+    if (value == null) {
       return null;
+    } else if (value.startsWith('[')) {
+      final List<String> values = value.substring(1, value.length).split('],[');
+      final List<Polygon> polygons = <Polygon>[]..length = values.length;
+      for (int i = 0; i < values.length; i++) {
+        polygons[i] =
+            Polygon.parse(values[i].replaceAll('[', '').replaceAll(']', ''));
+      }
+      return polygons;
+    } else {
+      final Polygon polygon = Polygon.parse(value);
+      return <Polygon>[polygon];
     }
   }
 
@@ -576,8 +580,10 @@ class Query extends AbstractQuery {
   set removeStopWords(Object removeStopWords) {
     if (removeStopWords is bool || removeStopWords is String) {
       this[_keyRemoveStopWords] = removeStopWords;
+    } else {
+      throw AlgoliaException(
+          'removeStopWords should be a bool or a String but it was ${removeStopWords.runtimeType}.');
     }
-    throw AlgoliaException('removeStopWords should be a bool or a String.');
   }
 
   Object get removeStopWords {
@@ -694,16 +700,18 @@ class Query extends AbstractQuery {
 
   bool get synonyms => AbstractQuery.parseBool(this[_keySynonyms]);
 
-  set tagFilters(List<String> tagFilters) => this[_keyTagFilters] = tagFilters;
+  set tagFilters(List<dynamic> tagFilters) =>
+      this[_keyTagFilters] = jsonEncode(tagFilters);
 
-  List<String> get tagFilters {
+  List<dynamic> get tagFilters {
     try {
       final String value = this[_keyTagFilters];
       if (value != null) {
-        final List<String> result = jsonDecode(value).cast<String>();
+        final List<dynamic> result = jsonDecode(value);
         return result;
       }
     } catch (e) {
+      rethrow;
       // Will return null
     }
     return null;
@@ -738,11 +746,7 @@ class Query extends AbstractQuery {
     if (types == null) {
       this[_keyAlternativesAsExact] = null;
     } else {
-      final List<String> stringList = <String>[]..length = types.length;
-      for (AlternativesAsExact type in types) {
-        stringList.add(type.toString());
-      }
-      this[_keyAlternativesAsExact] = stringList.join(',');
+      this[_keyAlternativesAsExact] = types.join(',');
     }
   }
 
@@ -750,16 +754,14 @@ class Query extends AbstractQuery {
     final String alternativesStr = this[_keyAlternativesAsExact];
     if (alternativesStr == null) {
       return null;
+    } else if (alternativesStr.isEmpty) {
+      return <AlternativesAsExact>[];
     }
 
-    final List<String> stringList = alternativesStr.split(', ');
-    final List<AlternativesAsExact> alternatives = <AlternativesAsExact>[]
-      ..length = stringList.length;
-    final int stringListLength = stringList.length;
-    for (int i = 0; i < stringListLength; i++) {
-      alternatives[i] = AlternativesAsExact.fromString(stringList[i]);
-    }
-    return alternatives;
+    return alternativesStr
+        .split(',')
+        .map(AlternativesAsExact.fromString)
+        .toList();
   }
 
   /// Choose which fields the response will contain. Applies to search and
@@ -809,7 +811,7 @@ class QueryType {
     final int i = _stringValues.indexOf(value);
 
     if (i == -1) {
-      throw StateError('The $value is not mapped to $QueryType.');
+      return null;
     }
 
     return values[i];
@@ -847,7 +849,7 @@ class RemoveWordsIfNoResults {
     final int i = _stringValues.indexOf(value);
 
     if (i == -1) {
-      throw StateError('The $value is not mapped to $RemoveWordsIfNoResults.');
+      return null;
     }
 
     return values[i];
@@ -875,8 +877,8 @@ class TypoTolerance {
   ];
 
   static const List<String> _stringValues = <String>[
-    'setTrue',
-    'setFalse',
+    'true',
+    'false',
     'min',
     'strict',
   ];
@@ -885,7 +887,7 @@ class TypoTolerance {
     final int i = _stringValues.indexOf(value);
 
     if (i == -1) {
-      throw StateError('The $value is not mapped to $TypoTolerance.');
+      return null;
     }
 
     return values[i];
@@ -920,7 +922,7 @@ class ExactOnSingleWordQuery {
     final int i = _stringValues.indexOf(value);
 
     if (i == -1) {
-      throw StateError('The $value is not mapped to $ExactOnSingleWordQuery.');
+      return null;
     }
 
     return values[i];
@@ -955,7 +957,7 @@ class AlternativesAsExact {
     final int i = _stringValues.indexOf(value);
 
     if (i == -1) {
-      throw StateError('The $value is not mapped to $AlternativesAsExact.');
+      return null;
     }
 
     return values[i];
@@ -987,7 +989,7 @@ class SortFacetValuesBy {
     final int i = _stringValues.indexOf(value);
 
     if (i == -1) {
-      throw StateError('The $value is not mapped to $SortFacetValuesBy.');
+      return null;
     }
 
     return values[i];
@@ -1084,10 +1086,12 @@ class IgnorePlurals {
       other is IgnorePlurals &&
           runtimeType == other.runtimeType &&
           enabled == other.enabled &&
-          languageCodes == other.languageCodes;
+          const ListEquality<String>()
+              .equals(languageCodes, other.languageCodes);
 
   @override
-  int get hashCode => enabled.hashCode ^ languageCodes.hashCode;
+  int get hashCode =>
+      enabled.hashCode ^ const ListEquality<String>().hash(languageCodes);
 }
 
 /// A rectangle in geo coordinates. Used in geo-search.
@@ -1114,7 +1118,7 @@ class GeoRect {
 class Polygon {
   Polygon(this.points)
       : assert(
-            points.length < 3, 'A polygon must have at least three vertices');
+            points.length <= 3, 'A polygon must have at least three vertices.');
 
   Polygon.copy(Polygon other) : points = other.points;
 
@@ -1152,8 +1156,8 @@ class Polygon {
       identical(this, other) ||
       other is Polygon &&
           runtimeType == other.runtimeType &&
-          points == other.points;
+          const ListEquality<LatLng>().equals(points, other.points);
 
   @override
-  int get hashCode => points.hashCode;
+  int get hashCode => const ListEquality<LatLng>().hash(points);
 }

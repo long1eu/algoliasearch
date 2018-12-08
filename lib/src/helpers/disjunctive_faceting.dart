@@ -10,26 +10,28 @@ import 'package:meta/meta.dart';
 class DisjunctiveFaceting {
   DisjunctiveFaceting({@required this.multipleQueriesAsync});
 
-  /**
-   * Run multiple queries. To be implemented by subclasses. The contract is the same as {@see Index#multipleQueriesAsync}.
-   *
-   * @param queries Queries to run.
-   * @param completionHandler Completion handler to be notified of results.
-   * @return A cancellable request.
-   */
-  final Future<Map<String, dynamic>> Function(List<Query> queries) multipleQueriesAsync;
+  /// Run multiple queries. To be implemented by subclasses. The contract is the same as {@see Index#multipleQueriesAsync}.
+  ///
+  /// @param queries Queries to run.
+  /// @param completionHandler Completion handler to be notified of results.
+  /// @return A cancellable request.
+  final Future<Map<String, dynamic>> Function(List<Query> queries)
+      multipleQueriesAsync;
 
-  /**
-   * Perform a search with disjunctive facets, generating as many queries as number of disjunctive facets.
-   *
-   * @param query             The query.
-   * @param disjunctiveFacets List of disjunctive facets.
-   * @param refinements       The current refinements, mapping facet names to a list of values.
-   * @param completionHandler The listener that will be notified of the request's outcome.
-   * @return A cancellable request.
-   */
-  Future<Map<String, dynamic>> searchDisjunctiveFacetingAsync<T extends List<String>>({@required Query query, @required List<String> disjunctiveFacets, @required Map<String, T> refinements}) async {
-    final List<Query> queries = computeDisjunctiveFacetingQueries(query, disjunctiveFacets, refinements);
+  /// Perform a search with disjunctive facets, generating as many queries as number of disjunctive facets.
+  ///
+  /// @param query             The query.
+  /// @param disjunctiveFacets List of disjunctive facets.
+  /// @param refinements       The current refinements, mapping facet names to a list of values.
+  /// @param completionHandler The listener that will be notified of the request's outcome.
+  /// @return A cancellable request.
+  Future<Map<String, dynamic>>
+      searchDisjunctiveFacetingAsync<T extends List<String>>(
+          {@required Query query,
+          @required List<String> disjunctiveFacets,
+          @required Map<String, T> refinements}) async {
+    final List<Query> queries = computeDisjunctiveFacetingQueries(
+        query, disjunctiveFacets, refinements);
 
     final Map<String, dynamic> result = await multipleQueriesAsync(queries);
 
@@ -40,14 +42,13 @@ class DisjunctiveFaceting {
     );
   }
 
-  /**
-   * Filter disjunctive refinements from generic refinements and a list of disjunctive facets.
-   *
-   * @param disjunctiveFacets the array of disjunctive facets
-   * @param refinements       Map representing the current refinements
-   * @return The disjunctive refinements
-   */
-  static Map<String, T> _filterDisjunctiveRefinements<T extends List<String>>(List<String> disjunctiveFacets, Map<String, T> refinements) {
+  /// Filter disjunctive refinements from generic refinements and a list of disjunctive facets.
+  ///
+  /// @param disjunctiveFacets the array of disjunctive facets
+  /// @param refinements       Map representing the current refinements
+  /// @return The disjunctive refinements
+  static Map<String, T> _filterDisjunctiveRefinements<T extends List<String>>(
+      List<String> disjunctiveFacets, Map<String, T> refinements) {
     final Map<String, T> disjunctiveRefinements = <String, T>{};
     for (MapEntry<String, T> elt in refinements.entries) {
       if (disjunctiveFacets.contains(elt.key)) {
@@ -57,17 +58,17 @@ class DisjunctiveFaceting {
     return disjunctiveRefinements;
   }
 
-  /**
-   * Compute the queries to run to implement disjunctive faceting.
-   *
-   * @param query             The query.
-   * @param disjunctiveFacets List of disjunctive facets.
-   * @param refinements       The current refinements, mapping facet names to a list of values.
-   * @return A list of queries suitable for {@link Index#multipleQueries}.
-   */
-  static List<Query> computeDisjunctiveFacetingQueries<T extends List<String>>(Query query, List<String> disjunctiveFacets, Map<String, T> refinements) {
+  /// Compute the queries to run to implement disjunctive faceting.
+  ///
+  /// @param query             The query.
+  /// @param disjunctiveFacets List of disjunctive facets.
+  /// @param refinements       The current refinements, mapping facet names to a list of values.
+  /// @return A list of queries suitable for {@link Index#multipleQueries}.
+  static List<Query> computeDisjunctiveFacetingQueries<T extends List<String>>(
+      Query query, List<String> disjunctiveFacets, Map<String, T> refinements) {
     // Retain only refinements corresponding to the disjunctive facets.
-    final Map<String, List<String>> disjunctiveRefinements = _filterDisjunctiveRefinements(disjunctiveFacets, refinements);
+    final Map<String, List<String>> disjunctiveRefinements =
+        _filterDisjunctiveRefinements(disjunctiveFacets, refinements);
 
     // build queries
     final List<Query> queries = <Query>[];
@@ -129,7 +130,8 @@ class DisjunctiveFaceting {
     return queries;
   }
 
-  static String _formatFilter<T extends List<String>>(MapEntry<String, T> refinement, String value) {
+  static String _formatFilter<T extends List<String>>(
+      MapEntry<String, T> refinement, String value) {
     return '${refinement.key}:$value';
   }
 
@@ -140,12 +142,14 @@ class DisjunctiveFaceting {
   /// @param refinements Facet refinements.
   /// @return The aggregated results.
   @visibleForTesting
-  static Map<String, dynamic> aggregateDisjunctiveFacetingResults<T extends List<String>>(
+  static Map<String, dynamic>
+      aggregateDisjunctiveFacetingResults<T extends List<String>>(
     Map<String, dynamic> answers,
     List<String> disjunctiveFacets,
     Map<String, T> refinements,
   ) {
-    final Map<String, T> disjunctiveRefinements = _filterDisjunctiveRefinements(disjunctiveFacets, refinements);
+    final Map<String, T> disjunctiveRefinements =
+        _filterDisjunctiveRefinements(disjunctiveFacets, refinements);
 
     // aggregate answers
     // first answer stores the hits + regular facets

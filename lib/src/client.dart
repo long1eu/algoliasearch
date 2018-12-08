@@ -38,7 +38,8 @@ class Client extends AbstractClient {
   /// The [applicationID] (available in your Algolia Dashboard). [apiKey] A
   /// valid API key for the service. An explicit list of hosts to target, or
   /// null to use the default hosts.
-  Client.forHosts(String applicationID, String apiKey, List<String> hosts) : super(applicationID, apiKey, hosts, hosts) {
+  Client.forHosts(String applicationID, String apiKey, List<String> hosts)
+      : super(applicationID, apiKey, hosts, hosts) {
     if (hosts == null) {
       // Initialize hosts to their default values.
       //
@@ -119,7 +120,7 @@ class Client extends AbstractClient {
     RequestOptions requestOptions,
   }) {
     return deleteRequest(
-      url: '/1/indexes/${Uri.encodeComponent(name)}',
+      url: '/1/indexes/${Uri.encodeQueryComponent(name)}',
       requestOptions: requestOptions,
     );
   }
@@ -136,7 +137,7 @@ class Client extends AbstractClient {
     RequestOptions requestOptions,
   }) {
     return postRequest(
-      url: '/1/indexes/${Uri.encodeComponent(srcIndexName)}/operation',
+      url: '/1/indexes/${Uri.encodeQueryComponent(srcIndexName)}/operation',
       readOperation: false,
       requestOptions: requestOptions,
       body: <String, dynamic>{'operation': 'move', 'destination': dstIndexName},
@@ -155,7 +156,7 @@ class Client extends AbstractClient {
     RequestOptions requestOptions,
   }) {
     return postRequest(
-      url: '/1/indexes/${Uri.encodeComponent(srcIndexName)}/operation',
+      url: '/1/indexes/${Uri.encodeQueryComponent(srcIndexName)}/operation',
       urlParameters: null,
       body: <String, dynamic>{'operation': 'copy', 'destination': dstIndexName},
       readOperation: false,
@@ -215,7 +216,8 @@ class MultipleQueriesStrategy {
 
   /// Execute the sequence of queries until the number of hits is reached by the
   /// sum of hits.
-  static const MultipleQueriesStrategy stopIfEnoughMatches = MultipleQueriesStrategy._(0);
+  static const MultipleQueriesStrategy stopIfEnoughMatches =
+      MultipleQueriesStrategy._(0);
 
   static const List<MultipleQueriesStrategy> values = <MultipleQueriesStrategy>[
     none,

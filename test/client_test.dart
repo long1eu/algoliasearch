@@ -8,7 +8,7 @@ import 'package:test/test.dart';
 
 import 'keys.dart';
 
-void main() async {
+void main() {
   Client client;
 
   setUp(() {

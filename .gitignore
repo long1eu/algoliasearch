@@ -1,12 +1,29 @@
 # Files and directories created by pub
 .dart_tool/
 .packages
-# Remove the following pattern if you wish to check in your lock file
 pubspec.lock
-
-# Conventional directory for build outputs
 build/
 
 # Directory created by dartdoc
 doc/api/
-test/res/keys.json
+
+# User-specific stuff
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries
+.idea/**/shelf
+
+# Generated files
+.idea/**/contentModel.xml
+
+# Sensitive or high-churn files
+.idea/**/dataSources/
+.idea/**/dataSources.ids
+.idea/**/dataSources.local.xml
+.idea/**/sqlDataSources.xml
+.idea/**/dynamic.xml
+.idea/**/uiDesigner.xml
+.idea/**/dbnavigator.xml
+
+test/keys.json

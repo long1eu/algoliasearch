@@ -29,7 +29,7 @@ import 'searchable.dart';
 /// </p>
 class Index extends Searchable {
   Index(this._client, this.rawIndexName)
-      : encodedIndexName = Uri.encodeComponent(rawIndexName);
+      : encodedIndexName = Uri.encodeQueryComponent(rawIndexName);
 
   /// This index's name, <b>not URL-encoded</b>.
   final String rawIndexName;
@@ -92,7 +92,7 @@ class Index extends Searchable {
     assert(facetText != null && facetText.isNotEmpty);
 
     final String path =
-        '/1/indexes/$encodedIndexName/facets/${Uri.encodeComponent(facetName)}/query';
+        '/1/indexes/$encodedIndexName/facets/${Uri.encodeQueryComponent(facetName)}/query';
     final Query params = query != null ? Query.copy(query) : Query();
     params['facetQuery'] = facetText;
 
@@ -143,7 +143,8 @@ class Index extends Searchable {
       );
     } else {
       return _client.putRequest(
-        url: '/1/indexes/$encodedIndexName/${Uri.encodeComponent(objectId)}',
+        url:
+            '/1/indexes/$encodedIndexName/${Uri.encodeQueryComponent(objectId)}',
         body: object,
         requestOptions: requestOptions,
       );
@@ -183,7 +184,7 @@ class Index extends Searchable {
   Future<Map<String, dynamic>> getObject(String objectId,
       {List<String> attributesToRetrieve, RequestOptions requestOptions}) {
     final String path =
-        '/1/indexes/$encodedIndexName/${Uri.encodeComponent(objectId)}';
+        '/1/indexes/$encodedIndexName/${Uri.encodeQueryComponent(objectId)}';
 
     Map<String, String> urlParameters;
     if (attributesToRetrieve != null) {
@@ -238,7 +239,7 @@ class Index extends Searchable {
     RequestOptions requestOptions,
   }) {
     final String path =
-        '/1/indexes/$encodedIndexName/${Uri.encodeComponent(objectID)}/partial';
+        '/1/indexes/$encodedIndexName/${Uri.encodeQueryComponent(objectID)}/partial';
     final Map<String, String> urlParameters = <String, String>{};
     if (createIfNotExists != null) {
       urlParameters['createIfNotExists'] = createIfNotExists.toString();
@@ -284,7 +285,7 @@ class Index extends Searchable {
       @required String objectID,
       RequestOptions requestOptions}) {
     return _client.putRequest(
-      url: '/1/indexes/$encodedIndexName/${Uri.encodeComponent(objectID)}',
+      url: '/1/indexes/$encodedIndexName/${Uri.encodeQueryComponent(objectID)}',
       urlParameters: null,
       body: object,
       requestOptions: requestOptions,
@@ -318,7 +319,7 @@ class Index extends Searchable {
     }
 
     return _client.deleteRequest(
-      url: '/1/indexes/$encodedIndexName/${Uri.encodeComponent(objectID)}',
+      url: '/1/indexes/$encodedIndexName/${Uri.encodeQueryComponent(objectID)}',
       urlParameters: null,
       requestOptions: requestOptions,
     );

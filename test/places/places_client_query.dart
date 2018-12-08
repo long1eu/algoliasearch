@@ -15,7 +15,7 @@ Future<void> main() async {
   PlacesClient places;
 
   setUp(() {
-    final Keys keys = Keys();
+    final Keys keys = Keys.places();
     places = PlacesClient(keys.applicationID, keys.apiKey);
   });
 

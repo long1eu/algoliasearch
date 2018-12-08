@@ -5,6 +5,8 @@
 import 'dart:collection';
 import 'dart:convert';
 
+import 'package:collection/collection.dart';
+
 /// An abstract search query.
 abstract class AbstractQuery {
   AbstractQuery({AbstractQuery other})
@@ -135,14 +137,16 @@ abstract class AbstractQuery {
   String toString() => '$runtimeType{$build()}';
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is AbstractQuery &&
-          runtimeType == other.runtimeType &&
-          parameters == other.parameters;
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        other is AbstractQuery &&
+            runtimeType == other.runtimeType &&
+            const MapEquality<String, String>()
+                .equals(parameters, other.parameters);
+  }
 
   @override
-  int get hashCode => parameters.hashCode;
+  int get hashCode => const MapEquality<String, String>().hash(parameters);
 }
 
 /// A pair of (latitude, longitude).
