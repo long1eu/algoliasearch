@@ -19,7 +19,7 @@ abstract class AbstractClient {
   AbstractClient(this.applicationID, this.apiKey, Client client, List<String> readHosts, List<String> writeHosts)
       : client = client ?? Client() {
     addUserAgent(const LibraryVersion('Algolia for Dart', _version));
-    addUserAgent(LibraryVersion('Dart', Platform.version));
+    addUserAgent(const LibraryVersion('Dart', '2.1.0'));
 
     if (readHosts != null) {
       this.readHosts = readHosts;
