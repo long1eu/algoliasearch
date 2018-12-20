@@ -9,14 +9,15 @@ import 'dart:io';
 import 'package:algoliasearch/src/abstract_query.dart';
 import 'package:algoliasearch/src/algolia_exception.dart';
 import 'package:algoliasearch/src/request_options.dart';
+import 'package:http/http.dart';
 import 'package:meta/meta.dart';
 
 enum Method { get, post, put, delete }
 
 /// An abstract API client.
 abstract class AbstractClient {
-  AbstractClient(this.applicationID, this.apiKey, List<String> readHosts,
-      List<String> writeHosts) {
+  AbstractClient(this.applicationID, this.apiKey, Client client, List<String> readHosts, List<String> writeHosts)
+      : client = client ?? Client() {
     addUserAgent(const LibraryVersion('Algolia for Dart', _version));
     addUserAgent(LibraryVersion('Dart', Platform.version));
 
@@ -35,6 +36,7 @@ abstract class AbstractClient {
   /// will go inside the body.
   static const int _maxApiKeyLength = 500;
 
+  final Client client;
   final String applicationID;
   final String apiKey;
 
@@ -50,15 +52,6 @@ abstract class AbstractClient {
 
   /// The user agents, as a structured list of library versions.
   List<LibraryVersion> userAgents = <LibraryVersion>[];
-
-  /// Connect timeout.
-  Duration connectTimeout = Duration(seconds: 2);
-
-  /// Default read (receive) timeout.
-  Duration readTimeout = Duration(seconds: 30);
-
-  /// Read timeout for search requests.
-  Duration searchTimeout = Duration(seconds: 5);
 
   /// Delay to wait when a host is down before retrying it.
   Duration hostDownDelay = Duration(seconds: 5);
@@ -142,11 +135,7 @@ abstract class AbstractClient {
       if (s.isNotEmpty) {
         s.write('; ');
       }
-      s
-        ..write(userAgent.name)
-        ..write(' (')
-        ..write(userAgent.version)
-        ..write(')');
+      s..write(userAgent.name)..write(' (')..write(userAgent.version)..write(')');
     }
     userAgentRaw = s.toString();
   }
@@ -167,7 +156,6 @@ abstract class AbstractClient {
       urlParameters: urlParameters,
       body: null,
       hosts: _readHostsThatAreUp,
-      connectTimeout: connectTimeout,
       requestOptions: requestOptions,
     );
   }
@@ -184,7 +172,6 @@ abstract class AbstractClient {
       urlParameters: urlParameters,
       body: null,
       hosts: _readHostsThatAreUp,
-      connectTimeout: connectTimeout,
       requestOptions: requestOptions,
     );
   }
@@ -199,7 +186,6 @@ abstract class AbstractClient {
       url: url,
       urlParameters: urlParameters,
       hosts: _writeHostsThatAreUp,
-      connectTimeout: connectTimeout,
       requestOptions: requestOptions,
     );
   }
@@ -217,7 +203,6 @@ abstract class AbstractClient {
       urlParameters: urlParameters,
       body: body,
       hosts: readOperation ? _readHostsThatAreUp : _writeHostsThatAreUp,
-      connectTimeout: connectTimeout,
       requestOptions: requestOptions,
     );
   }
@@ -235,7 +220,6 @@ abstract class AbstractClient {
       urlParameters: urlParameters,
       body: body,
       hosts: readOperation ? _readHostsThatAreUp : _writeHostsThatAreUp,
-      connectTimeout: connectTimeout,
       requestOptions: requestOptions,
     );
   }
@@ -252,7 +236,6 @@ abstract class AbstractClient {
       urlParameters: urlParameters,
       body: body,
       hosts: _writeHostsThatAreUp,
-      connectTimeout: connectTimeout,
       requestOptions: requestOptions,
     );
   }
@@ -267,8 +250,7 @@ abstract class AbstractClient {
       final Map result = jsonDecode(utf8.decode(input));
       return Map<String, dynamic>.from(result);
     } else {
-      throw StateError(
-          'Only String and List<int> are supported, but got $input');
+      throw StateError('Only String and List<int> are supported, but got $input');
     }
   }
 
@@ -276,7 +258,6 @@ abstract class AbstractClient {
     @required Method method,
     @required String url,
     @required List<String> hosts,
-    @required Duration connectTimeout,
     Map<String, dynamic> body,
     Map<String, String> urlParameters,
     RequestOptions requestOptions,
@@ -288,7 +269,6 @@ abstract class AbstractClient {
         urlParameters: urlParameters,
         body: body,
         hosts: hosts,
-        connectTimeout: connectTimeout,
         requestOptions: requestOptions,
       );
       return getMap(raw);
@@ -305,12 +285,8 @@ abstract class AbstractClient {
     @required Map<String, String> urlParameters,
     @required Map<String, dynamic> body,
     @required List<String> hosts,
-    @required Duration connectTimeout,
     RequestOptions requestOptions,
   }) async {
-    final HttpClient httpClient = HttpClient()
-      ..connectionTimeout = connectTimeout;
-
     String requestMethod;
     final List<dynamic> errors = <dynamic>[];
     // for each host
@@ -334,8 +310,8 @@ abstract class AbstractClient {
           throw ArgumentError('Method $method is not supported');
       }
 
-      HttpClientRequest request;
-      HttpClientResponse response;
+      Request request;
+      StreamedResponse response;
       try {
         // Compute final URL parameters.
         final Map<String, String> parameters = <String, String>{};
@@ -354,33 +330,30 @@ abstract class AbstractClient {
         final Uri uri = Uri.parse(urlString);
         print('$method=>$uri');
 
-        request = await httpClient.openUrl(requestMethod, uri);
-        request.headers.add('X-Algolia-Application-Id', applicationID);
+        request = Request(requestMethod, uri);
+        request.headers['X-Algolia-Application-Id'] = applicationID;
 
         // If API key is too big, send it in the request's body (if applicable).
-        if (apiKey != null &&
-            apiKey.length > _maxApiKeyLength &&
-            body != null) {
+        if (apiKey != null && apiKey.length > _maxApiKeyLength && body != null) {
           body['apiKey'] = apiKey;
         } else {
-          request.headers.add('X-Algolia-API-Key', apiKey);
+          request.headers['X-Algolia-API-Key'] = apiKey;
         }
 
         // Client-level headers
         for (MapEntry<String, String> entry in _headers.entries) {
-          request.headers.add(entry.key, entry.value);
+          request.headers[entry.key] = entry.value;
         }
 
         // Request-level headers
         if (requestOptions != null) {
-          for (MapEntry<String, String> entry
-              in requestOptions.headers.entries) {
-            request.headers.add(entry.key, entry.value);
+          for (MapEntry<String, String> entry in requestOptions.headers.entries) {
+            request.headers[entry.key] = entry.value;
           }
         }
 
         // set user agent
-        request.headers.add('User-Agent', userAgentRaw);
+        request.headers['User-Agent'] = userAgentRaw;
 
         // write JSON entity
         if (body != null) {
@@ -390,12 +363,12 @@ abstract class AbstractClient {
 
           final String data = jsonEncode(body);
           request
-            ..headers.add('content-type', 'application/json; charset=UTF-8')
-            ..write(data);
+            ..headers['content-type'] = 'application/json; charset=UTF-8'
+            ..body = data;
 
-          response = await request.close();
+          response = await request.send();
         } else {
-          response = await request.close();
+          response = await request.send();
         }
 
         // read response
@@ -405,7 +378,7 @@ abstract class AbstractClient {
 
         final List<int> rawResponse = <int>[];
         final Completer<void> completer = Completer<void>();
-        response.listen(
+        response.stream.listen(
           rawResponse.addAll,
           onDone: completer.complete,
           onError: completer.completeError,
@@ -454,9 +427,7 @@ abstract class AbstractClient {
 
   bool isUpOrCouldBeRetried(String host) {
     final _HostStatus status = hostStatuses[host];
-    return status == null ||
-        status.isUp ||
-        DateTime.now().difference(status.lastTryTimestamp) >= hostDownDelay;
+    return status == null || status.isUp || DateTime.now().difference(status.lastTryTimestamp) >= hostDownDelay;
   }
 }
 
@@ -471,10 +442,7 @@ class LibraryVersion {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is LibraryVersion &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          version == other.version;
+      other is LibraryVersion && runtimeType == other.runtimeType && name == other.name && version == other.version;
 
   @override
   int get hashCode => name.hashCode ^ version.hashCode;

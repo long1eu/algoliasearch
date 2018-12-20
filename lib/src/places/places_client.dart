@@ -16,8 +16,7 @@ class PlacesClient extends AbstractClient {
   ///
   /// NOTE: The rate limit for the unauthenticated API is significantly lower
   /// than for the authenticated API.
-  PlacesClient([String applicationID, String apiKey])
-      : super(applicationID, apiKey, null, null) {
+  PlacesClient([String applicationID, String apiKey]) : super(applicationID, apiKey, null, null, null) {
     _setDefaultHosts();
   }
 

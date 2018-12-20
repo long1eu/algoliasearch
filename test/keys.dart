@@ -6,7 +6,7 @@ import 'dart:convert';
 import 'dart:io';
 
 class Keys {
-  Keys({bool places}) {
+  Keys({bool places = false}) {
     final File file = File('${Directory.current.path}/test/key.json');
     final String data = file.existsSync() ? file.readAsStringSync() : jsonModel;
     Map keys = jsonDecode(data);

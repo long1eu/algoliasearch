@@ -27,3 +27,5 @@ doc/api/
 .idea/**/dbnavigator.xml
 
 test/keys.json
+test.json
+test.sh

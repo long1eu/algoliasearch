@@ -3,6 +3,7 @@
 // on 2018-12-05
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:algoliasearch/src/abstract_client.dart';
 import 'package:algoliasearch/src/algolia_exception.dart';
@@ -82,8 +83,11 @@ void main() {
   });
 
   test('search', () async {
-    final Map<String, dynamic> content =
-        await index.search(Query.value('Francisco'));
+    index = Client('1XFTRJUX0H', '357b5a200b006fb6aaf4dbce4b6f6bc1')
+        .getIndex('dance_schools');
+    final Map<String, dynamic> content = await index.search(Query.value('sam'));
+    File('/Users/long1eu/IdeaProjects/algoliasearch/test.json')
+        .writeAsStringSync(jsonEncode(content));
     expect(content['nbHits'], 1);
   });
 
