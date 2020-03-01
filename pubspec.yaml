@@ -5,14 +5,14 @@ homepage: http://github.com/long1eu/algoliasearch
 author: long1eu <home@long1.eu>
 
 environment:
-  sdk: '>=2.0.0 <3.0.0'
+  sdk: '>=2.1.0 <3.0.0'
 
 dependencies:
-  path: ^1.4.1
+  path: ^1.6.4
   quiver: any
   http: any
 
 dev_dependencies:
-  test: ^1.0.0
-  uuid: ^1.0.3
-  mockito: ^4.0.0
+  test: ^1.12.0
+  uuid: ^2.0.4
+  mockito: ^4.1.1

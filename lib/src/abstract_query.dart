@@ -72,7 +72,7 @@ abstract class AbstractQuery {
 
     // First try to parse JSON notation.
     try {
-      final List<String> result = jsonDecode(string).cast<String>();
+      final List<String> result = List<String>.from(jsonDecode(string));
       return result;
     }
     // Otherwise parse as a comma-separated list.

@@ -1031,7 +1031,7 @@ class IgnorePlurals {
       final List<String> codesList = <String>[];
       //ignorePlurals=['en','fi']
       try {
-        final List<String> codes = jsonDecode(s).cast<String>();
+        final List<String> codes = List<String>.from(jsonDecode(s));
         for (int i = 0; i < codes.length; i++) {
           codesList.add(codes[i].toString());
         }

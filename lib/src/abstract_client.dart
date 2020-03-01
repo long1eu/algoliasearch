@@ -16,7 +16,8 @@ enum Method { get, post, put, delete }
 
 /// An abstract API client.
 abstract class AbstractClient {
-  AbstractClient(this.applicationID, this.apiKey, List<String> readHosts, List<String> writeHosts) {
+  AbstractClient(this.applicationID, this.apiKey, Client client, List<String> readHosts, List<String> writeHosts)
+      : client = client ?? Client() {
     addUserAgent(const LibraryVersion('Algolia for Dart', _version));
     addUserAgent(const LibraryVersion('Dart', '2.1.0'));
 
@@ -35,6 +36,7 @@ abstract class AbstractClient {
   /// will go inside the body.
   static const int _maxApiKeyLength = 500;
 
+  final Client client;
   final String applicationID;
   final String apiKey;
 
@@ -364,9 +366,9 @@ abstract class AbstractClient {
             ..headers['content-type'] = 'application/json; charset=UTF-8'
             ..body = data;
 
-          response = await request.send();
+          response = await client.send(request);
         } else {
-          response = await request.send();
+          response = await client.send(request);
         }
 
         // read response

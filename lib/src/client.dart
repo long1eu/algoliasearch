@@ -6,6 +6,7 @@ import 'package:algoliasearch/src/abstract_client.dart';
 import 'package:algoliasearch/src/index.dart';
 import 'package:algoliasearch/src/index_query.dart';
 import 'package:algoliasearch/src/request_options.dart';
+import 'package:http/http.dart' as http;
 import 'package:meta/meta.dart';
 
 /// Entry point to the Dart API.
@@ -26,8 +27,8 @@ class Client extends AbstractClient {
   ///
   /// The [applicationID] (available in your Algolia Dashboard). [apiKey] A
   /// valid API key for the service.
-  factory Client(String applicationID, String apiKey) {
-    return Client.forHosts(applicationID, apiKey, null);
+  factory Client(String applicationID, String apiKey, [http.Client client]) {
+    return Client.forHosts(applicationID, apiKey, null, client);
   }
 
   /// Create a new Algolia Search client with explicit hosts to target.
@@ -38,8 +39,8 @@ class Client extends AbstractClient {
   /// The [applicationID] (available in your Algolia Dashboard). [apiKey] A
   /// valid API key for the service. An explicit list of hosts to target, or
   /// null to use the default hosts.
-  Client.forHosts(String applicationID, String apiKey, List<String> hosts)
-      : super(applicationID, apiKey, hosts, hosts) {
+  Client.forHosts(String applicationID, String apiKey, List<String> hosts, [http.Client client])
+      : super(applicationID, apiKey, client, hosts, hosts) {
     if (hosts == null) {
       // Initialize hosts to their default values.
       //

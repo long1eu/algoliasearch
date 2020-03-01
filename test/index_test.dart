@@ -60,7 +60,7 @@ void main() {
       final int taskID = task['taskID'];
       await originalIndex.waitTask(taskID);
 
-      final List<String> objectIDs = task['objectIDs'].cast<String>();
+      final List<String> objectIDs = List<String>.from(task['objectIDs']);
       originalIds = <String>[]..addAll(objectIDs);
       didInitIndices = true;
     }
